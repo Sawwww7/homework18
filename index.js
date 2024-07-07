@@ -95,11 +95,17 @@ concurrentPromises([
 
 
 async function sequenceAsync(arr) {
-  const result = [];
+  let result;
+  for (const func of arr) {
+      result = await func(result);
+  }
+  return result;
+
+  /*const result = [];
   for (const item of arr) {
     result.push(await item(result[result.length - 1]));
   }
-  return result[result.length-1];
+  return result[result.length-1];*/
 }
 
 const myArrPromise = [ 
