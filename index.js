@@ -4,7 +4,7 @@
  sumArrayPromise([1, 2, 3, 4, 5]).then(console.log)
 // 15;*/
 ////////////////////////////////////////////////////////////////////////////////////////////////
-/*
+
 const sumArrayPromise = (arrNumbers) => 
   new Promise((resolve) => {
     setTimeout(() => {
@@ -17,7 +17,7 @@ const sumArrayPromise = (arrNumbers) =>
     }, 3000);
   });
 
-sumArrayPromise([1, 2, 3, 4, 5]).then(console.log);*/
+sumArrayPromise([1, 2, 3, 4, 5]).then(console.log);
 
 ////////////////////////////////////////////////////////////////////////////////////////
 /*concurrentPromises.Створіть функцію concurrentPromises, 
@@ -33,86 +33,57 @@ sumArrayPromise([1, 2, 3, 4, 5]).then(console.log);*/
 // Через 1300мс виводить: "Promise 3"*/
 ///////////////////////////////////////////////////////////////////////////////////////////
 
-const concurrentPromises1 = (arrPromises, quantity) => {
-  let cursor = 0;
-  let arrProm = arrPromises.slice(cursor, quantity + cursor);
-  
+/*1. Принимает массив промисов promises и максимальное количество одновременно выполняемых промисов maxConcurrent.
+2. Использует массив results для хранения результатов выполнения промисов и массив executing 
+для отслеживания текущих выполняемых промисов.
+3. Функция enqueue добавляет промисы в выполнение, пока не достигнет максимального количества
+ одновременно выполняемых промисов.
+4. Когда промис завершается, его результат сохраняется в results, и функция enqueue вызывается
+ снова для запуска следующих промисов.
+5. Если все промисы завершены, вызывается resolve с массивом результатов.*/
 
-  let promis = Promise.all(arrProm)
-    .then((values) => {
-      cursor += 1;
-      console.log(values);
-      console.log(cursor)
-      return cursor      
-    })    
-    .then(result =>{
-      let arrProm = arrPromises.slice(cursor, quantity + cursor);
-      let promis = Promise.all(arrProm)
-      .then((values) => {
-        cursor += 1;
-        console.log(values);
-        console.log(cursor)
-        return cursor        
-      })     
-    })
+function concurrentPromises(promises, maxConcurrent) {
+  let index = 0;
+  const results = [];
+  const executing = [];
 
-  return promis;
-};
+  function runNext() {
+      if (index >= promises.length && executing.length === 0) {
+          return Promise.resolve(results);
+      }
 
-const arrPromises1 = [
-  new Promise((resolve) => setTimeout(() => resolve("Promise 1"), 1000)),
-  new Promise((resolve) => setTimeout(() => resolve("Promise 2"), 500)),
-  new Promise((resolve) => setTimeout(() => resolve("Promise 3"), 800)),
-  new Promise((resolve) => setTimeout(() => resolve("Promise 4"), 800)),
-];
+      while (index < promises.length && executing.length < maxConcurrent) {
+          const currentIndex = index++;
+          const promise = promises[currentIndex];
+          console.log(`Starting promise ${currentIndex + 1}`);
 
-concurrentPromises1(arrPromises1, 2).then(console.log);
-///////////////////////////////////////////////////////////////////////////////////////////
+          const p = promise.then((result) => {
+              console.log(`Finished promise ${currentIndex + 1}`);
+              results[currentIndex] = result;
+              executing.splice(executing.indexOf(p), 1);
+          });
 
-const concurrentPromises3 = (arrPromises, quantity) => {
-  let a = 0;
-  let arrProm = arrPromises.slice(a, quantity + a);
-  let promis = Promise.all(arrProm).then((values) => {
-    (a += 1), console.log(a);
-    let promis2 = Promise.all(arrProm).then((values) => {
-      console.log(values);
-    });
-    return values;
-  });
-  return promis;
-};
+          executing.push(p);
+      }
 
-const arrPromises3 = [
-  new Promise((resolve) => setTimeout(() => resolve("Promise 1"), 1000)),
-  new Promise((resolve) => setTimeout(() => resolve("Promise 2"), 500)),
-  new Promise((resolve) => setTimeout(() => resolve("Promise 3"), 800)),
-  new Promise((resolve) => setTimeout(() => resolve("Promise 3"), 800)),
-];
-
-concurrentPromises3(arrPromises3, 2).then(console.log);
-/////////////////////////////////////////////////////////////////////////////
-
-async function concurrentPromises2(arrPromises, quantity) {
-  let a = 0;
-  let allPromises2 = arrPromises.slice(a, quantity + a);
-  for (const item of allPromises2) {
-    //debugger
-    let response = await item;
-    a = a + 1;
-    console.log(a);
-    console.log(response);
+      const next = Promise.race(executing).then(runNext);
+      return next;
   }
+
+  return runNext().then(() => Promise.all(executing)).then(() => results);
 }
 
-concurrentPromises2(
-  [
-    new Promise((resolve) => setTimeout(() => resolve("Promise 1"), 2000)),
-    new Promise((resolve) => setTimeout(() => resolve("Promise 2"), 3000)),
-    new Promise((resolve) => setTimeout(() => resolve("Promise 3"), 7000)),
-    new Promise((resolve) => setTimeout(() => resolve("Promise 4"), 9000)),
-  ],
-  2
-); //.then(console.log)
+// Пример использования:
+concurrentPromises([
+  new Promise(resolve => setTimeout(() => resolve('Promise 1'), 1000)),
+  new Promise(resolve => setTimeout(() => resolve('Promise 2'), 500)),
+  new Promise(resolve => setTimeout(() => resolve('Promise 3'), 800)),
+  new Promise(resolve => setTimeout(() => resolve('Promise 4'), 1200)),
+  new Promise(resolve => setTimeout(() => resolve('Promise 5'), 1400)),
+  new Promise(resolve => setTimeout(() => resolve('Promise 6'), 800))
+], 2).then((results) => {
+  console.log(results); // Должно выводить результаты по мере их завершения
+});
 
 ////////////////////////////////////////////////////////////////////////////////////////////////
 /*sequenceAsync.Реалізуйте функцію sequenceAsync, яка приймає масив функцій-промісів asyncFunctions. 
@@ -122,7 +93,7 @@ concurrentPromises2(
   яка дозволяє виконувати довільну кількість функцій-промісів у правильному порядку.*/
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
-/*
+
 async function sequenceAsync(arr) {
   const result = [];
   for (const item of arr) {
@@ -155,4 +126,4 @@ const myArrPromise2 = [
     new Promise((resolve) => setTimeout(() => resolve(`${resul}!`), 1000)),]
 
   sequenceAsync(myArrPromise2).then(console.log);
-*/
+
