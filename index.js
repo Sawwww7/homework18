@@ -33,12 +33,50 @@ sumArrayPromise([1, 2, 3, 4, 5]).then(console.log);*/
 // Через 1300мс виводить: "Promise 3"*/
 ///////////////////////////////////////////////////////////////////////////////////////////
 
+const concurrentPromises1 = (arrPromises, quantity) => {
+  let cursor = 0;
+  let arrProm = arrPromises.slice(cursor, quantity + cursor);
+  
+
+  let promis = Promise.all(arrProm)
+    .then((values) => {
+      cursor += 1;
+      console.log(values);
+      console.log(cursor)
+      return cursor      
+    })    
+    .then(result =>{
+      let arrProm = arrPromises.slice(cursor, quantity + cursor);
+      let promis = Promise.all(arrProm)
+      .then((values) => {
+        cursor += 1;
+        console.log(values);
+        console.log(cursor)
+        return cursor        
+      })     
+    })
+
+  return promis;
+};
+
+const arrPromises1 = [
+  new Promise((resolve) => setTimeout(() => resolve("Promise 1"), 1000)),
+  new Promise((resolve) => setTimeout(() => resolve("Promise 2"), 500)),
+  new Promise((resolve) => setTimeout(() => resolve("Promise 3"), 800)),
+  new Promise((resolve) => setTimeout(() => resolve("Promise 4"), 800)),
+];
+
+concurrentPromises1(arrPromises1, 2).then(console.log);
+///////////////////////////////////////////////////////////////////////////////////////////
 
 const concurrentPromises3 = (arrPromises, quantity) => {
   let a = 0;
   let arrProm = arrPromises.slice(a, quantity + a);
   let promis = Promise.all(arrProm).then((values) => {
     (a += 1), console.log(a);
+    let promis2 = Promise.all(arrProm).then((values) => {
+      console.log(values);
+    });
     return values;
   });
   return promis;
@@ -74,9 +112,7 @@ concurrentPromises2(
     new Promise((resolve) => setTimeout(() => resolve("Promise 4"), 9000)),
   ],
   2
-)//.then(console.log)
-
-
+); //.then(console.log)
 
 ////////////////////////////////////////////////////////////////////////////////////////////////
 /*sequenceAsync.Реалізуйте функцію sequenceAsync, яка приймає масив функцій-промісів asyncFunctions. 
